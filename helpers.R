@@ -257,6 +257,48 @@ calcAllYears <- function(dailyData, site, p10p50p90) {
   
 }
 
+#Proudce a duration curve from a vector of dates and corresponding flows. 
+#dates - date object
+#flows - a numerical vector
+#yrs - an integer vector of years
+#normalize - the value of 
+durationPlot <- function(dates, flows, yrs, normalize = 1, log=FALSE) {
+  
+  flowData <- data.frame(dates, flows)
+  flowData$year <- year(flowData$dates)
+  flowData <- flowData[flowData$year %in% yrs,]
+  
+  flowData$normFlows <- flowData$flows/normalize
+  
+  quant <- seq(from = 0.05, to = 0.95, by=0.05)
+  flowQuantiles <- data.frame(quant, normFlows = quantile(flowData$normFlows, quant))
+  flowQuantiles$quant <- rev(flowQuantiles$quant) * 100
+  
+  if(normalize == 1) {
+    ylab <- "Streamflow, in cfs"
+  } else {
+    ylab <- "Streamflow, normalized by drainage area, in cfs/sq. mile"
+  }
+  ttl <- paste0("Excedence plot, ", min(yrs), "-", max(yrs))
+  
+  exPlot <- ggplot(data = flowQuantiles) +
+    geom_line(aes(x=quant, y=normFlows), color="steelblue") + 
+    geom_point(aes(quant, y=normFlows), color="blue") +
+    scale_x_continuous(breaks = seq(0, 100, 25), minor_breaks = 0) +
+    theme(panel.background = element_rect(fill="white"),
+          panel.grid.major = element_line(color="grey50", linetype = "solid"),
+          panel.grid.minor = element_line(color="grey50", linetype = "dashed"),
+          title = element_text(size = 16),
+          axis.title = element_text(size = 14),
+          axis.text = element_text(size = 14)) +
+    labs(title=ttl, x = "Frequency of exceedance, in percent", y=ylab)
+  
+  if(log)
+    exPlot <- exPlot + scale_y_log10()
+  
+  return(exPlot)
+  
+}
 
 
 

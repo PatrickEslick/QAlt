@@ -25,7 +25,7 @@ shinyUI(fluidPage(
   ),
 #Output the tables and plots
   tabsetPanel(
-    tabPanel("Individual Sites",
+    tabPanel("Sites",
       fluidRow(
         column(4,
           textOutput("label1"),
@@ -38,6 +38,20 @@ shinyUI(fluidPage(
             tabPanel("Plot",
               selectizeInput("plotStats1", "Stats to plot:", choices=statChoices, multiple=TRUE),
               plotOutput("plot1")         
+            ),
+            tabPanel("Exceedance Plot",
+              fluidRow(
+                column(6,
+                  uiOutput("yearSelect1")   
+                ),
+                column(4,
+                  checkboxInput("exNorm1", "Normalize by drainage area", value=FALSE)
+                ),
+                column(2,
+                  checkboxInput("exLog1", "Log scale", value=FALSE)
+                )
+              ),
+              plotOutput("exPlot1")
             ),
             tabPanel("Download",
               helpText("-"),
@@ -61,6 +75,20 @@ shinyUI(fluidPage(
               ),
               plotOutput("plot2")         
             ),
+            tabPanel("Exceedance Plot",
+              fluidRow(
+                column(6,
+                  uiOutput("yearSelect2")   
+                ),
+                column(4,
+                  checkboxInput("exNorm2", "Normalize by drainage area", value=FALSE)
+                ),
+                column(2,
+                  checkboxInput("exLog2", "Log scale", value=FALSE)
+                )
+              ),
+              plotOutput("exPlot2")
+            ),
             tabPanel("Download",
               helpText("-"),
               downloadButton("downloadFlow2", "Daily Flow"),
@@ -82,6 +110,20 @@ shinyUI(fluidPage(
                 column(4, helpText("- "), checkboxInput("same3As1", "Use Plot 1 Selection"))
               ),
               plotOutput("plot3")         
+            ),
+            tabPanel("Exceedance Plot",
+              fluidRow(
+                column(6,
+                  uiOutput("yearSelect3")   
+                ),
+                column(4,
+                  checkboxInput("exNorm3", "Normalize by drainage area", value=FALSE)
+                ),
+                column(2,
+                  checkboxInput("exLog3", "Log scale", value=FALSE)
+                )
+              ),
+              plotOutput("exPlot3")
             ),
             tabPanel("Download",
               helpText("-"),

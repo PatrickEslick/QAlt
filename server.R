@@ -43,8 +43,11 @@ shinyServer(function(input, output) {
     
     input$go
     
-    sites <- isolate(input$sites)
-    dateRange <- isolate(input$dateRange)
+    isolate({
+      sites <- input$sites
+      dateRange <- input$dateRange
+    })
+
     if(sites != "") {
       
       #Return daily values of flow for all sites listed in input$sites
@@ -201,6 +204,31 @@ shinyServer(function(input, output) {
     }
   })
   
+  output$yearSelect1 <- renderUI({
+
+    dt <- dailyData()[[1]]
+    start <- year(min(dt$date))
+    end <- year(max(dt$date))
+    
+    sliderInput("exYears1", "Years:", start, end, c(start, end), step=1, sep="")
+    
+  })
+  
+  output$exPlot1 <- renderPlot({
+    
+    data <- dailyData()[[1]]
+    st <- strsplit(input$sites, ",")[[1]][1]
+    
+    if(input$exNorm1) {
+      norm <- drainageArea(st) 
+    } else {
+      norm <- 1
+    }
+    
+    durationPlot(data$date, data$discharge, yrs=input$exYears1, normalize = norm, log=input$exLog1)
+    
+  })
+  
   #Allow user to download the flow data for site 1
   output$downloadFlow1 <- downloadHandler(
     filename = function() {
@@ -283,6 +311,31 @@ shinyServer(function(input, output) {
         legend(min(data$year), -0.25 * yMax, stats, col=colors[1:nStats], pch=17, horiz=TRUE, bty='n')
       }
     }
+  })
+  
+  output$yearSelect2 <- renderUI({
+    
+    dt <- dailyData()[[2]]
+    start <- year(min(dt$date))
+    end <- year(max(dt$date))
+    
+    sliderInput("exYears2", "Years:", start, end, c(start, end), step=1, sep="")
+    
+  })
+  
+  output$exPlot2 <- renderPlot({
+    
+    data <- dailyData()[[2]]
+    st <- strsplit(input$sites, ",")[[1]][2]
+    
+    if(input$exNorm2) {
+      norm <- drainageArea(st) 
+    } else {
+      norm <- 1
+    }
+    
+    durationPlot(data$date, data$discharge, yrs=input$exYears2, normalize = norm, log=input$exLog2)
+    
   })
   
   #Allow user to download the flow data for site 1
@@ -368,6 +421,31 @@ shinyServer(function(input, output) {
         legend(min(data$year), -0.25 * yMax, stats, col=colors[1:nStats], pch=17, horiz=TRUE, bty='n')
       }
     }
+  })
+  
+  output$yearSelect3 <- renderUI({
+    
+    dt <- dailyData()[[3]]
+    start <- year(min(dt$date))
+    end <- year(max(dt$date))
+
+    sliderInput("exYears3", "Years:", start, end, c(start, end), step=1, sep="")
+    
+  })
+  
+  output$exPlot3 <- renderPlot({
+    
+    data <- dailyData()[[3]]
+    st <- strsplit(input$sites, ",")[[1]][3]
+    
+    if(input$exNorm3) {
+      norm <- drainageArea(st) 
+    } else {
+      norm <- 1
+    }
+    
+    durationPlot(data$date, data$discharge, yrs=input$exYears3, normalize = norm, log=input$exLog3)
+    
   })
   
   #Allow user to download the flow data for site 1
