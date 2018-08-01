@@ -300,5 +300,13 @@ durationPlot <- function(dates, flows, yrs, normalize = 1, log=FALSE) {
   
 }
 
+#Function to calculate total flow volume for a period of time
+flowVolume <- function(flowData) {
+  
+  flowData$dailyCF <- flowData$discharge * 86400
+  totalVolume <- sum(flowData$dailyCF)
+  return(totalVolume)
+  
+}
 
 
