@@ -158,6 +158,24 @@ shinyUI(fluidPage(
         )
       )
     ),
+    tabPanel("Flow Volume",
+      column(8,
+        plotOutput("timeSeriesAll", width = "100%", height="300px",
+                   brush = brushOpts(id = "allTsBrush", resetOnNew = TRUE, direction="x")),
+        plotOutput("zTimeSeriesAll", width= "100%", height="300px",
+                   brush = brushOpts(id = "fvBrush", resetOnNew = TRUE, direction="x"))
+      ),
+      column(4, 
+        radioButtons("fvSelect", "Calculate flow volumes from",
+                    choices = c("Highlighted plot region" = "plotSelect",
+                                "Manually entered range" = "manualDates"),
+                    selected = "plotSelect"),
+        uiOutput("fvDateSelect"),
+        textOutput("fvDateRange"),
+        tableOutput("flowVolumes")
+      )
+             
+    ),
     tabPanel("Explanation and references",
       fluidRow(
         downloadButton("downloadExplanation", "Download PDF")

@@ -11,6 +11,7 @@ library(shiny)
 library(dataRetrieval)
 library(lubridate)
 library(ggplot2)
+library(dplyr)
 source("helpers.R")
 colors <- c("blue3", "red", "springgreen3", "pink2", "burlywood4")
 sym <- c(15, 8, 19, 17, 3)
@@ -25,6 +26,8 @@ statChoices <-  c("P50", "AVG_ANNUAL", "CV_FLOW", "AVG_JAN", "AVG_FEB", "AVG_MAR
 shinyServer(function(input, output) {
   
   ranges <- reactiveValues(x = NULL, y = NULL)
+  rangesAll <- reactiveValues(x = NULL, y = NULL)
+  rangesFlowVolume <- reactiveValues(x = NULL, y = NULL)
   
   p10p50p90 <- reactive({
     input$go
@@ -502,8 +505,6 @@ shinyServer(function(input, output) {
       }
       yMax <- max(yMax) * 1.2
       
-      print(yMax)
-      
       #Plot the first stat series from the first site
       data <- allData[[stations[1]]]
       data <- data.frame(t(data))
@@ -628,6 +629,180 @@ shinyServer(function(input, output) {
       p 
     }
     
+  })
+  
+  output$timeSeriesAll <- renderPlot({
+    
+    input$go
+    
+    stations <- isolate(strsplit(input$sites, ",")[[1]])
+    nms <- vector()
+    for(i in 1:length(stations)) {
+      nms[length(nms) + 1] <- readNWISsite(stations[i])$station_nm
+    }
+    
+    if(length(stations) > 0) {
+      newData <- dailyData()[[stations[1]]]
+      names(newData)[2] <- paste0("discharge", stations[1])
+      plotData <- newData
+    }
+    if(length(stations) > 1) {
+      newData <- dailyData()[[stations[2]]]
+      names(newData)[2] <- paste0("discharge", stations[2])
+      plotData <- plotData %>% inner_join(newData, by = "date")
+    }
+    if(length(stations) > 2) {
+      newData <- dailyData()[[stations[3]]]
+      names(newData)[2] <- paste0("discharge", stations[3])
+      plotData <- plotData %>% inner_join(newData, by = "date")
+    }
+    
+    plotnames <- paste0("discharge", stations)
+    
+    pl <- ggplot(data = plotData)
+    if(length(stations) > 0) {
+      pl <- pl + geom_line(aes_string(x = "date" , y = plotnames[1], color = shQuote(nms[1])))
+    }
+    if(length(stations) > 1) {
+      pl <- pl + geom_line(aes_string(x = "date", y = plotnames[2], color = shQuote(nms[2])))
+    }
+    if(length(stations) > 2) {
+      pl <- pl + geom_line(aes_string(x = "date", y = plotnames[3], color = shQuote(nms[3])))
+    }
+    pl <- pl + xlab("Date") + ylab("Discharge (cfs)") +
+      scale_y_log10() +
+      scale_color_manual("Site", values = colors[1:length(stations)])
+    pl
+    
+  })
+  
+  observe({
+    brush <- input$allTsBrush
+    if (!is.null(brush)) {
+      rangesAll$x <- c(as.Date(brush$xmin, origin="1970-01-01"), as.Date(brush$xmax, origin="1970-01-01"))
+    } else {
+      rangesAll$x <- NULL
+      rangesAll$y <- NULL
+    }
+  })
+  
+  output$zTimeSeriesAll <- renderPlot({
+    
+    input$go
+    stations <- isolate(strsplit(input$sites, ",")[[1]])
+    nms <- vector()
+    for(i in 1:length(stations)) {
+      nms[length(nms) + 1] <- readNWISsite(stations[i])$station_nm
+    }
+    
+    if(length(stations) > 0) {
+      newData <- dailyData()[[stations[1]]]
+      names(newData)[2] <- paste0("discharge", stations[1])
+      plotData <- newData
+    }
+    if(length(stations) > 1) {
+      newData <- dailyData()[[stations[2]]]
+      names(newData)[2] <- paste0("discharge", stations[2])
+      plotData <- plotData %>% inner_join(newData, by = "date")
+    }
+    if(length(stations) > 2) {
+      newData <- dailyData()[[stations[3]]]
+      names(newData)[2] <- paste0("discharge", stations[3])
+      plotData <- plotData %>% inner_join(newData, by = "date")
+    }
+    
+    plotnames <- paste0("discharge", stations)
+    
+    pl <- ggplot(data = plotData)
+    if(length(stations) > 0) {
+      pl <- pl + geom_line(aes_string(x = "date" , y = plotnames[1], color = shQuote(nms[1])))
+    }
+    if(length(stations) > 1) {
+      pl <- pl + geom_line(aes_string(x = "date", y = plotnames[2], color = shQuote(nms[2])))
+    }
+    if(length(stations) > 2) {
+      pl <- pl + geom_line(aes_string(x = "date", y = plotnames[3], color = shQuote(nms[3])))
+    }
+    pl <- pl + xlab("Date") + ylab("Discharge (cfs)") +
+      scale_y_log10() +
+      scale_color_manual("Site", values = colors[1:length(stations)], guide = FALSE)
+    if(!is.null(rangesAll$x)) {
+      pl <- pl + scale_x_date(limits=rangesAll$x)
+    }
+    pl
+    
+  })
+  
+  observe({
+    brush <- input$fvBrush
+    if (!is.null(brush)) {
+      rangesFlowVolume$x <- c(as.Date(brush$xmin, origin="1970-01-01"), as.Date(brush$xmax, origin="1970-01-01"))
+    } else {
+      rangesFlowVolume$x <- NULL
+      rangesFlowVolume$y <- NULL
+    }
+  })
+  
+  output$fvDateSelect <- renderUI({
+    if(input$fvSelect == "plotSelect") {
+      return(NULL)
+    } else {
+      dateRangeInput("fvDates", "Date range")
+    }
+  })
+  
+  output$fvDateRange <- renderText({
+    if(input$fvSelect == "plotSelect") {
+      dates <- rangesFlowVolume$x
+      dates <- floor_date(dates, unit="day")
+    } else {
+      dates <- input$fvDates
+    }
+    
+    if(!is.null(dates)) {
+      txt <- paste("Total flow volume from", dates[1], "to", dates[2], "in cubic feet")
+    } else {
+      txt <- NULL
+    }
+    txt
+  })
+  
+  output$flowVolumes <- renderTable({
+    
+    if(input$fvSelect == "plotSelect") {
+      dates <- rangesFlowVolume$x
+      dates <- floor_date(dates, unit="day")
+    } else {
+      dates <- input$fvDates
+    }
+    
+    if(!is.null(dates)) {
+      stations <- isolate(strsplit(input$sites, ",")[[1]])
+      nms <- vector()
+      for(i in 1:length(stations)) {
+        nms[length(nms) + 1] <- readNWISsite(stations[i])$station_nm
+      }
+      
+      print(class(dates[1]))
+      print(as.numeric(dates[1]))
+      print(class(dates[2]))
+      print(as.numeric(dates[2]))
+      
+      out_station <- vector()
+      out_volume <- vector()
+      for(i in 1:length(stations)) {
+        dt <- dailyData()[[stations[i]]] %>%
+          filter(date >= dates[1], date <= dates[2])
+        print(head(dt))
+        print(tail(dt))
+        out_station[length(out_station) + 1] <- nms[i]
+        out_volume[length(out_volume) + 1] <- flowVolume(dt)
+      }
+      out <- data.frame("Site" = out_station, "Volume" = out_volume)
+      out
+    } else {
+      out <- NULL
+    }
   })
   
 })
