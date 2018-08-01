@@ -593,8 +593,6 @@ shinyServer(function(input, output) {
     brush <- input$tsBrush
     if (!is.null(brush)) {
       ranges$x <- c(as.Date(brush$xmin, origin="1970-01-01"), as.Date(brush$xmax, origin="1970-01-01"))
-      ranges$y <- c(brush$ymin, brush$ymax)
-      
     } else {
       ranges$x <- NULL
       ranges$y <- NULL
@@ -614,9 +612,9 @@ shinyServer(function(input, output) {
               panel.grid.minor=element_line(color="black", linetype="dashed")) 
       if(!(is.null(ranges$x))) {
         if(input$zpLog) {
-          p <- p + scale_y_log10(limits=ranges$y) + scale_x_date(limits=ranges$x)
+          p <- p + scale_y_log10() + scale_x_date(limits=ranges$x)
         } else {
-          p <- p + scale_y_continuous(limits=ranges$y) + scale_x_date(limits=ranges$x)
+          p <- p + scale_y_continuous() + scale_x_date(limits=ranges$x)
         }
       } else {
         p <- p + scale_x_date()

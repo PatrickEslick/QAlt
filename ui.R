@@ -147,7 +147,8 @@ shinyUI(fluidPage(
       checkboxInput("tsLog", label="Log10 scale for Y-Axis", value=TRUE),
       fluidRow(
         column(12, 
-          plotOutput("timeSeries", width="100%", height="400px", brush = brushOpts(id = "tsBrush", resetOnNew = TRUE))
+          plotOutput("timeSeries", width="100%", height="400px", 
+                     brush = brushOpts(id = "tsBrush", resetOnNew = TRUE, direction="x"))
         )
       ),
       checkboxInput("zpLog", label="Log10 scale for Y-Axis", value=TRUE),
