@@ -17,7 +17,7 @@ shinyUI(fluidPage(
     column(2,textInput("sites", "Site numbers:", value="06893300,06893390,06892360"),
            helpText("Up to 3, comma separated"),
            checkboxInput("forceScales", "Force Equivalent Scales")),
-    column(2, sliderInput("dateRange","Years:", 1999, 2017, c(2014, 2016), step=1, sep="")),
+    column(2, sliderInput("dateRange","Years:", 1972, 2018, c(2014, 2016), step=1, sep="")),
     column(1, actionButton("go", "Go"))
   ),
   fluidRow(
