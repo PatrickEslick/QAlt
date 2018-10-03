@@ -270,7 +270,7 @@ durationPlot <- function(dates, flows, yrs, normalize = 1, log=FALSE) {
   
   flowData$normFlows <- flowData$flows/normalize
   
-  quant <- seq(from = 0.05, to = 0.95, by=0.05)
+  quant <- seq(from = 0.01, to = 0.99, by=0.01)
   flowQuantiles <- data.frame(quant, normFlows = quantile(flowData$normFlows, quant))
   flowQuantiles$quant <- rev(flowQuantiles$quant) * 100
   
