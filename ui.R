@@ -166,6 +166,7 @@ shinyUI(fluidPage(
                    brush = brushOpts(id = "fvBrush", resetOnNew = TRUE, direction="x"))
       ),
       column(4, 
+        checkboxInput("fvNormalizeDrainage", "Normalize plots by drainage area", value = FALSE),
         radioButtons("fvSelect", "Calculate flow volumes from",
                     choices = c("Highlighted plot region" = "plotSelect",
                                 "Manually entered range" = "manualDates"),

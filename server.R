@@ -644,16 +644,22 @@ shinyServer(function(input, output) {
     if(length(stations) > 0) {
       newData <- dailyData()[[stations[1]]]
       names(newData)[2] <- paste0("discharge", stations[1])
+      if(input$fvNormalizeDrainage)
+        newData[,2] <- newData[,2] / drainageArea(stations[1])
       plotData <- newData
     }
     if(length(stations) > 1) {
       newData <- dailyData()[[stations[2]]]
       names(newData)[2] <- paste0("discharge", stations[2])
+      if(input$fvNormalizeDrainage)
+        newData[,2] <- newData[,2] / drainageArea(stations[2])
       plotData <- plotData %>% inner_join(newData, by = "date")
     }
     if(length(stations) > 2) {
       newData <- dailyData()[[stations[3]]]
       names(newData)[2] <- paste0("discharge", stations[3])
+      if(input$fvNormalizeDrainage)
+        newData[,2] <- newData[,2] / drainageArea(stations[3])
       plotData <- plotData %>% inner_join(newData, by = "date")
     }
     
@@ -698,16 +704,22 @@ shinyServer(function(input, output) {
     if(length(stations) > 0) {
       newData <- dailyData()[[stations[1]]]
       names(newData)[2] <- paste0("discharge", stations[1])
+      if(input$fvNormalizeDrainage)
+        newData[,2] <- newData[,2] / drainageArea(stations[1])
       plotData <- newData
     }
     if(length(stations) > 1) {
       newData <- dailyData()[[stations[2]]]
       names(newData)[2] <- paste0("discharge", stations[2])
+      if(input$fvNormalizeDrainage)
+        newData[,2] <- newData[,2] / drainageArea(stations[2])
       plotData <- plotData %>% inner_join(newData, by = "date")
     }
     if(length(stations) > 2) {
       newData <- dailyData()[[stations[3]]]
       names(newData)[2] <- paste0("discharge", stations[3])
+      if(input$fvNormalizeDrainage)
+        newData[,2] <- newData[,2] / drainageArea(stations[3])
       plotData <- plotData %>% inner_join(newData, by = "date")
     }
     
