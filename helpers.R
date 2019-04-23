@@ -309,4 +309,45 @@ flowVolume <- function(flowData) {
   
 }
 
+flowComponentPlot <- function(dates, flows, title = "Flow components") {
+  
+  month_letter <- c("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D")
+  month_start <- as.numeric(as.character(as.Date(c("2001-01-01", "2001-02-01", "2001-03-01", "2001-04-01",
+                                                  "2001-05-01", "2001-06-01", "2001-07-01", "2001-08-01",
+                                                  "2001-09-01", "2001-10-01", "2001-11-01", "2001-12-01")),
+                            format = "%j"))
+  
+  data <- data.frame(date = dates, Q = flows)
+  data$J <- as.numeric(as.character(data$date, format = "%j"))
+  min <- e95 <- e75 <- e10 <- e5 <- vector(length = 72, mode = "numeric")
+  for(i in 1:72) {
+    qntl <- quantile(data$Q[data$J %in% (((i-1) * 5) + 1):(((i-1) * 5) + 5)],
+                     probs = c(0, 0.05, 0.25, 0.90, 0.95))
+    min[i] <- qntl[1]
+    e95[i] <- qntl[2]
+    e75[i] <- qntl[3]
+    e10[i] <- qntl[4]
+    e5[i] <- qntl[5]
+  }
+  
+  plotData <- data.frame(D = (0:71)*5 + 1, min, e95, e75, e10, e5)
+  
+  plt <- ggplot(data = plotData) +
+    geom_ribbon(aes(x = D, ymin = min, ymax = e95, fill = "mygreen")) +
+    geom_ribbon(aes(x = D, ymin = e95, ymax = e75, fill = "mypurple")) +
+    geom_ribbon(aes(x = D, ymin = e75, ymax = e10, fill = "myblue")) +
+    geom_ribbon(aes(x = D, ymin = e10, ymax = e5, fill = "myred")) +
+    scale_x_continuous(breaks = month_start, labels = month_letter) +
+    scale_fill_manual("", values = c(mygreen = "#4daf4a", mypurple = "#984ea3", 
+                                     myblue = "#377eb8", myred = "#e41a1c"),
+                      labels = c("Min-5%", "5%-25%", "25%-90%", "90%-95%")) +
+    ylab("Discharge (cfs)") + xlab(NULL) + ggtitle(title) +
+    theme(panel.background = element_rect(fill = NA),
+          panel.grid.major = element_line(color = "grey80"))
+ 
+  return(plt)
+   
+}
+
+
 
