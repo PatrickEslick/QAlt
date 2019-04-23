@@ -1,5 +1,7 @@
 library(lubridate)
 library(dataRetrieval)
+library(dplyr)
+library(purrr)
 
 #Take a daily data frame and subset it by only the complete years
 preCheck <- function(dailyData) {
@@ -349,5 +351,35 @@ flowComponentPlot <- function(dates, flows, title = "Flow components") {
    
 }
 
+get_uv_data <- function(sites, start, end) {
+  
+  start <- as.Date(start)
+  end <- as.Date(end)
+  span <- difftime(end, start, units = "days")
+  if(span > 7)
+    end <- start + as.difftime(7, units = "days")
+  
+  uv_data <- list()
+  
+  for(i in sites) {
+    site_uv <- readNWISuv(i, "00060", start, end) %>%
+      select(dateTime, X_00060_00000) %>%
+      rename(datetime = dateTime, Q = X_00060_00000) 
+    names(site_uv)[names(site_uv) == "Q"] <- paste0("Q", i)
+    uv_data[[i]] <- site_uv
+  }
+  
+  out <- reduce(uv_data, full_join, by = "datetime")
+  
+}
+
+uv_flow_volume <- function(datetime, uv_discharge) {
+  start <- min(datetime)
+  end <- max(datetime)
+  span <- as.numeric(difftime(end, start, units = "secs"))
+  mean_q <- mean(uv_discharge, na.rm = TRUE)
+  volume <- mean_q * span
+  return(volume)
+}
 
 

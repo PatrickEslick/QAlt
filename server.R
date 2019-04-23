@@ -28,6 +28,8 @@ shinyServer(function(input, output) {
   ranges <- reactiveValues(x = NULL, y = NULL)
   rangesAll <- reactiveValues(x = NULL, y = NULL)
   rangesFlowVolume <- reactiveValues(x = NULL, y = NULL)
+  rangesEd <- reactiveValues(x = NULL, y = NULL)
+  rangesEdFlowVolume <- reactiveValues(x = NULL, y = NULL)
   
   p10p50p90 <- reactive({
     input$go
@@ -797,18 +799,11 @@ shinyServer(function(input, output) {
         nms[length(nms) + 1] <- readNWISsite(stations[i])$station_nm
       }
       
-      print(class(dates[1]))
-      print(as.numeric(dates[1]))
-      print(class(dates[2]))
-      print(as.numeric(dates[2]))
-      
       out_station <- vector()
       out_volume <- vector()
       for(i in 1:length(stations)) {
         dt <- dailyData()[[stations[i]]] %>%
           filter(date >= dates[1], date <= dates[2])
-        print(head(dt))
-        print(tail(dt))
         out_station[length(out_station) + 1] <- nms[i]
         out_volume[length(out_volume) + 1] <- flowVolume(dt)
       }
@@ -818,5 +813,199 @@ shinyServer(function(input, output) {
       out <- NULL
     }
   })
+  
+  output$edRangeUI <- renderUI({
+    
+    min <- paste0(input$dateRange[1], "-01-01")
+    max <-paste0(input$dateRange[2], "-12-31")
+    start <- min
+    end <- as.character(as.Date(start) + as.difftime(7, units = "days"))
+    
+    dateRangeInput("edDateRange", "Date range", min = min, max = max, start = start, end = end)
+    
+  })
+  
+  edData <- reactive({
+
+    input$edGo
+
+    isolate({
+      sites <- input$sites
+      start <- input$edDateRange[1]
+      end <- input$edDateRange[2]
+    })
+    
+    if(is.null(start)) {
+      return(NULL)
+    }
+    
+    stations <- strsplit(sites, ",")[[1]]
+    
+    edData <- get_uv_data(stations, start, end)
+    
+    return(edData)
+
+  })
+  
+  output$edTimeSeries <- renderPlot({
+
+    if(is.null(edData()))
+      return(NULL)
+
+    plotData <- edData()
+
+    stations <- strsplit(input$sites, ",")[[1]]
+    nms <- vector()
+    for(i in 1:length(stations)) {
+      nms[length(nms) + 1] <- readNWISsite(stations[i])$station_nm
+    }
+
+    if(input$edNormalizeDrainage) {
+      for(i in stations) {
+        plotData[,paste0("Q", i)] <- plotData[,paste0("Q", i)] / drainageArea(i)
+      }
+    }
+
+    plotnames <- paste0("Q", stations)
+
+    pl <- ggplot(data = plotData)
+    if(length(stations) > 0) {
+      pl <- pl + geom_line(aes_string(x = "datetime" , y = plotnames[1], color = shQuote(nms[1])))
+    }
+    if(length(stations) > 1) {
+      pl <- pl + geom_line(aes_string(x = "datetime", y = plotnames[2], color = shQuote(nms[2])))
+    }
+    if(length(stations) > 2) {
+      pl <- pl + geom_line(aes_string(x = "datetime", y = plotnames[3], color = shQuote(nms[3])))
+    }
+    if(input$edLogScale)
+      pl <- pl + scale_y_log10()
+    pl <- pl + xlab("Date") + ylab("Discharge (cfs)") +
+      scale_color_manual("Site", values = colors[1:length(stations)]) +
+      scale_x_datetime()
+    pl
+
+  })
+
+  observe({
+    brush <- input$edTsBrush
+    if (!is.null(brush)) {
+      rangesEd$x <- c(as.POSIXct(brush$xmin, origin="1970-01-01"), 
+                      as.POSIXct(brush$xmax, origin="1970-01-01"))
+    } else {
+      rangesEd$x <- NULL
+      rangesEd$y <- NULL
+    }
+  })
+  
+  output$zedTimeSeries <- renderPlot({
+    
+    if(is.null(edData()))
+      return(NULL)
+    
+    plotData <- edData()
+    
+    stations <- strsplit(input$sites, ",")[[1]]
+    nms <- vector()
+    for(i in 1:length(stations)) {
+      nms[length(nms) + 1] <- readNWISsite(stations[i])$station_nm
+    }
+    
+    if(input$edNormalizeDrainage) {
+      for(i in stations) {
+        plotData[,paste0("Q", i)] <- plotData[,paste0("Q", i)] / drainageArea(i)
+      }
+    }
+    
+    plotnames <- paste0("Q", stations)
+    
+    pl <- ggplot(data = plotData)
+    if(length(stations) > 0) {
+      pl <- pl + geom_line(aes_string(x = "datetime" , y = plotnames[1], color = shQuote(nms[1])))
+    }
+    if(length(stations) > 1) {
+      pl <- pl + geom_line(aes_string(x = "datetime", y = plotnames[2], color = shQuote(nms[2])))
+    }
+    if(length(stations) > 2) {
+      pl <- pl + geom_line(aes_string(x = "datetime", y = plotnames[3], color = shQuote(nms[3])))
+    }
+    if(input$edLogScale)
+      pl <- pl + scale_y_log10()
+    pl <- pl + xlab("Date") + ylab("Discharge (cfs)") +
+      scale_color_manual("Site", values = colors[1:length(stations)], guide = FALSE) +
+      scale_x_datetime(limits = rangesEd$x)
+    pl
+  })
+  
+  observe({
+    brush <- input$zedTsBrush
+    if (!is.null(brush)) {
+      rangesEdFlowVolume$x <- c(as.POSIXct(brush$xmin, origin="1970-01-01"), 
+                                as.POSIXct(brush$xmax, origin="1970-01-01"))
+    } else {
+      rangesEdFlowVolume$x <- NULL
+      rangesEdFlowVolume$y <- NULL
+    }
+  })
+
+  output$edRange <- renderText({
+    
+    if(is.null(rangesEdFlowVolume$x)) {
+      if(is.null(rangesEd$x)) {
+        data <- edData()
+      } else {
+        data <- edData() %>%
+          filter(datetime >= rangesEd$x[1], datetime <= rangesEd$x[2])
+      }
+  
+    } else {
+      data <- edData() %>%
+        filter(datetime >= rangesEdFlowVolume$x[1], datetime <= rangesEdFlowVolume$x[2])
+    }
+    start <- as.character(min(data$datetime), format = "%Y-%m-%d %H:%M %Z")
+    end <- as.character(max(data$datetime), format = "%Y-%m-%d %H:%M %Z")
+    text <- paste("Total flow volume from", start, "to", end)
+    return(text)
+    
+  })
+  
+  output$edFlowVolumes <- renderTable({
+    
+    if(is.null(edData()))
+      return(NULL)
+    
+    stations <- strsplit(input$sites, ",")[[1]]
+    
+    if(is.null(rangesEdFlowVolume$x)) {
+      if(is.null(rangesEd$x)) {
+        data <- edData()
+      } else {
+        data <- edData() %>%
+          filter(datetime >= rangesEd$x[1], datetime <= rangesEd$x[2])
+      }
+      
+    } else {
+      data <- edData() %>%
+        filter(datetime >= rangesEdFlowVolume$x[1], datetime <= rangesEdFlowVolume$x[2])
+    }
+    
+    nms <- vector()
+    for(i in 1:length(stations)) {
+      nms[length(nms) + 1] <- readNWISsite(stations[i])$station_nm
+    }
+    
+    flow_volumes <- vector()
+    for(i in 1:length(stations)) {
+      flow_volumes[length(flow_volumes) + 1] <- 
+        uv_flow_volume(data$datetime, data[,paste0("Q", stations[i])])
+    }
+    
+    out <- data.frame(Site = nms, Volume = flow_volumes)
+    return(out)
+      
+
+  })
+  
+  
   
 })

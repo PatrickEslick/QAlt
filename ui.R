@@ -26,6 +26,7 @@ shinyUI(fluidPage(
 #Output the tables and plots
   tabsetPanel(
     tabPanel("Sites",
+      h3("View statistics and plots for individual sites"),
       fluidRow(
         column(4,
           textOutput("label1"),
@@ -135,10 +136,12 @@ shinyUI(fluidPage(
       )
     ),
     tabPanel("Combined Plot",
+      h3("Plot statistics for multiple sites"),
       selectizeInput("combinedStats", "Stats to plot:", choices=statChoices, multiple=TRUE),
       column(8, plotOutput("combinedPlot", height=600))
     ),
     tabPanel("Time Series",
+      h3("View a time series of daily values for the selected site"),
       fluidRow(
         column(4,
           uiOutput("whichTS")
@@ -159,6 +162,7 @@ shinyUI(fluidPage(
       )
     ),
     tabPanel("Flow Volume",
+      h3("Calculate flow volume based on daily values"),
       column(8,
         plotOutput("timeSeriesAll", width = "100%", height="300px",
                    brush = brushOpts(id = "allTsBrush", resetOnNew = TRUE, direction="x")),
@@ -177,6 +181,32 @@ shinyUI(fluidPage(
         tableOutput("flowVolumes")
       )
              
+    ),
+    tabPanel("Event detail",
+      h3("View instantaneous values, and calculate flow volume"),
+      fluidRow(
+        column(12,
+          helpText("Select up to 7 days. If more than 7 days are selected, the first 7 will be used.")       
+        )
+      ),
+      fluidRow(
+        column(2, uiOutput("edRangeUI")),
+        column(1,  style = "margin-top: 25px;", actionButton("edGo","Go"))
+      ),
+      fluidRow(
+        column(8,
+          plotOutput("edTimeSeries", width = "100%", height="300px",
+                     brush = brushOpts(id = "edTsBrush", resetOnNew = TRUE, direction="x")),
+          plotOutput("zedTimeSeries", width= "100%", height="300px",
+                    brush = brushOpts(id = "zedTsBrush", resetOnNew = TRUE, direction="x"))
+        ),
+        column(4,
+          checkboxInput("edNormalizeDrainage", "Normalize plots by drainage area", value = FALSE),
+          checkboxInput("edLogScale", "Log10 scale for y-axis", value = TRUE),
+          textOutput("edRange"),
+          tableOutput("edFlowVolumes")        
+        )
+      )
     ),
     tabPanel("Explanation and references",
       fluidRow(
