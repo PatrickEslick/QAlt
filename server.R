@@ -675,8 +675,9 @@ shinyServer(function(input, output) {
     if(length(stations) > 2) {
       pl <- pl + geom_line(aes_string(x = "date", y = plotnames[3], color = shQuote(nms[3])))
     }
+    if(input$fvLogScale)
+      pl <- pl + scale_y_log10()
     pl <- pl + xlab("Date") + ylab("Discharge (cfs)") +
-      scale_y_log10() +
       scale_color_manual("Site", values = colors[1:length(stations)])
     pl
     
@@ -735,8 +736,9 @@ shinyServer(function(input, output) {
     if(length(stations) > 2) {
       pl <- pl + geom_line(aes_string(x = "date", y = plotnames[3], color = shQuote(nms[3])))
     }
+    if(input$fvLogScale)
+      pl <- pl + scale_y_log10()
     pl <- pl + xlab("Date") + ylab("Discharge (cfs)") +
-      scale_y_log10() +
       scale_color_manual("Site", values = colors[1:length(stations)], guide = FALSE)
     if(!is.null(rangesAll$x)) {
       pl <- pl + scale_x_date(limits=rangesAll$x)

@@ -144,7 +144,7 @@ shinyUI(fluidPage(
           uiOutput("whichTS")
         )
       ),
-      checkboxInput("tsLog", label="Log10 scale for Y-Axis", value=TRUE),
+      checkboxInput("tsLog", label="Log10 scale for y-axis", value=TRUE),
       fluidRow(
         column(12, 
           plotOutput("timeSeries", width="100%", height="400px", 
@@ -167,6 +167,7 @@ shinyUI(fluidPage(
       ),
       column(4, 
         checkboxInput("fvNormalizeDrainage", "Normalize plots by drainage area", value = FALSE),
+        checkboxInput("fvLogScale", "Log10 scale for y-axis", value = TRUE),
         radioButtons("fvSelect", "Calculate flow volumes from",
                     choices = c("Highlighted plot region" = "plotSelect",
                                 "Manually entered range" = "manualDates"),
